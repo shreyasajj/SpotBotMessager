@@ -85,7 +85,7 @@ class SpotifyConnect(Resource):
                                                track["external_urls"]["spotify"]}, 200
                         if not sent:
                             logging("No results for " + temp2, provider)
-                            return {'message': "Did not add: There were no results"}, 404
+                            return {'message': "Did not add: There were no results"}, 200
                 except spotipy.SpotifyException as error:
                     if error.reason != "NO_ACTIVE_DEVICE":
                         raise Exception
@@ -130,3 +130,4 @@ def addQueue(sp, play):
 
 # data processing endpoint
 api.add_resource(SpotifyConnect, '/message')
+
