@@ -16,8 +16,8 @@
 ##CMD [ "python3", "-m" , "flask", "run", "--host=0.0.0.0"]
 #CMD [ "python3", "app.py"]
 ##CMD ["uwsgi --ini uwsgi.ini"]
-FROM python:3.8-slim-buster
-
+FROM python:3.8
+#FROM python:latest
 RUN pip install pipenv
 
 COPY . /flask-deploy
