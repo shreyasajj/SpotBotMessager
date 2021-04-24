@@ -69,7 +69,7 @@ class SpotifyConnect(Resource):
                         results = searchSpot(sp, temp2)
                         sent = False
                         for idx, track in enumerate(results['tracks']['items']):
-                            addQueue(track["uri"])
+                            addQueue(sp, track["uri"])
                             found = False
                             Artist = ""
                             for index, artists in enumerate(track["album"]["artists"]):
