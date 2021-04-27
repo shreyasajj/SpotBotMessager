@@ -38,63 +38,67 @@ class SpotifyConnect(Resource):
             temp = messageVal
             if temp.startswith("!"):
                 temp2 = temp[1:].strip().replace(" ", "+").lower()
-                try:
-                    if temp2 == "!next":
-                        nexttrack(sp)
-                        logging("Moved to next Song", provider)
-                        return {'message': "Moved to next song"}, 200
-                    elif temp2 == "!back":
-                        backtrack(sp)
-                        logging("Moved to previous Song", provider)
-                        return {'message': "Moved to previous song"}, 200
-                    elif temp2.startswith("!fplay"):
-                        search = temp2[6:].strip("+").replace(" ", "+").lower()
-                        results = searchSpot(sp, search)
-                        for idx, track in enumerate(results['tracks']['items']):
-                            forcePlay(sp, track["uri"])
-                            found = False
-                            Artist = ""
-                            for index, artists in enumerate(track["album"]["artists"]):
-                                Artist += artists["name"] + ", "
-                                found = True
-                            if not found:
-                                Artist = "No found artist"
-                            else:
-                                Artist = Artist[0:-2]
-                            logging("Forced Played: " + track["name"] + " By:" + Artist + " -------------- Link: " +
-                                    track["external_urls"]["spotify"], provider)
-                            return {'message': "Forced Played: " + track["name"] + "\nBy:" + Artist + "\nLink: " + \
-                                               track["external_urls"]["spotify"]}, 200
-                    else:
-                        results = searchSpot(sp, temp2)
-                        sent = False
-                        for idx, track in enumerate(results['tracks']['items']):
-                            addQueue(sp, track["uri"])
-                            found = False
-                            Artist = ""
-                            for index, artists in enumerate(track["album"]["artists"]):
-                                Artist += artists["name"] + ", "
-                                found = True
-                            if not found:
-                                Artist = "No found artist"
-                            else:
-                                Artist = Artist[0:-2]
-                            logging("Added " + track["name"] + " By:" + Artist + " ---------- Link: " + \
-                                    track["external_urls"]["spotify"], provider)
-                            return {'message': "Added " + track["name"] + "\nBy:" + Artist + "\nLink: " + \
-                                               track["external_urls"]["spotify"]}, 200
-                        if not sent:
-                            logging("No results for " + temp2, provider)
-                            return {'message': "Did not add: There were no results"}, 200
-                except spotipy.SpotifyException as error:
-                    if error.reason != "NO_ACTIVE_DEVICE":
-                        raise Exception
-                    else:
-                        logging("Error: Spotify not active: " + str(error), provider)
-                        return {'message': "Error: Spotify not active"}, 428
-                except Exception as e:
-                    logging("Error: " + str(e), provider)
-                    return {'message': "Error: " + str(e)}, 401
+                if temp2!="!" and temp2 != "" and temp2 !="!!":
+                    try:
+                        if temp2 == "!next":
+                            nexttrack(sp)
+                            logging("Moved to next Song", provider)
+                            return {'message': "Moved to next song"}, 200
+                        elif temp2 == "!back":
+                            backtrack(sp)
+                            logging("Moved to previous Song", provider)
+                            return {'message': "Moved to previous song"}, 200
+                        elif temp2.startswith("!fplay"):
+                            search = temp2[6:].strip("+").replace(" ", "+").lower()
+                            results = searchSpot(sp, search)
+                            for idx, track in enumerate(results['tracks']['items']):
+                                forcePlay(sp, track["uri"])
+                                found = False
+                                Artist = ""
+                                for index, artists in enumerate(track["album"]["artists"]):
+                                    Artist += artists["name"] + ", "
+                                    found = True
+                                if not found:
+                                    Artist = "No found artist"
+                                else:
+                                    Artist = Artist[0:-2]
+                                logging("Forced Played: " + track["name"] + " By:" + Artist + " -------------- Link: " +
+                                        track["external_urls"]["spotify"], provider)
+                                return {'message': "Forced Played: " + track["name"] + "\nBy:" + Artist + "\nLink: " + \
+                                                   track["external_urls"]["spotify"]}, 200
+                        else:
+                            results = searchSpot(sp, temp2)
+                            sent = False
+                            for idx, track in enumerate(results['tracks']['items']):
+                                addQueue(sp, track["uri"])
+                                found = False
+                                Artist = ""
+                                for index, artists in enumerate(track["album"]["artists"]):
+                                    Artist += artists["name"] + ", "
+                                    found = True
+                                if not found:
+                                    Artist = "No found artist"
+                                else:
+                                    Artist = Artist[0:-2]
+                                logging("Added " + track["name"] + " By:" + Artist + " ---------- Link: " + \
+                                        track["external_urls"]["spotify"], provider)
+                                return {'message': "Added " + track["name"] + "\nBy:" + Artist + "\nLink: " + \
+                                                   track["external_urls"]["spotify"]}, 200
+                            if not sent:
+                                logging("No results for " + temp2, provider)
+                                return {'message': "Did not add: There were no results"}, 200
+                    except spotipy.SpotifyException as error:
+                        if error.reason != "NO_ACTIVE_DEVICE":
+                            raise Exception
+                        else:
+                            logging("Error: Spotify not active: " + str(error), provider)
+                            return {'message': "Error: Spotify not active"}, 428
+                    except Exception as e:
+                        logging("Error: " + str(e), provider)
+                        return {'message': "Error: " + str(e)}, 401
+                else:
+                    logging("Nothing was provided", provider)
+                    return {'message': "Error: There was nothing provided"}, 404
             else:
                 logging("Did not have a message that started with !", provider)
                 return {'message': "Must start with !"}, 400
