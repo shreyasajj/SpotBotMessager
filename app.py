@@ -29,11 +29,11 @@ def create_app():
     app.config.from_object('config')
     api.init_app(app)
 
-    @app.before_first_request
-    def beforeAnything():
-        fname = "Logging.txt"
-        if os.path.isfile(fname):
-            os.remove(fname)
+    # @app.before_first_request
+    # def beforeAnything():
+    #     fname = "Logging.txt"
+    #     if os.path.isfile(fname):
+    #         os.remove(fname)
 
     @app.route('/', methods=['GET'])
     def index():
