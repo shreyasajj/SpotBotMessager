@@ -35,42 +35,55 @@ class SpotifyConnect(Resource):
 
             sp = spotipy.Spotify(auth_manager=auth_manager)
 
-            temp = messageVal
-            if temp.startswith("!"):
-                temp2 = temp[1:].strip().replace(" ", "+").lower()
-                if temp2!="!" and temp2 != "" and temp2 !="!!":
+            message = messageVal
+            if message.startswith("!"):
+                temp = message[1:].strip().lower()
+                if temp != "!" and temp != "" and temp != "!!":
                     try:
-                        if temp2 == "!next":
-                            nexttrack(sp)
-                            logging("Moved to next Song", provider)
-                            return {'message': "Moved to next song"}, 200
-                        elif temp2 == "!back":
-                            backtrack(sp)
-                            logging("Moved to previous Song", provider)
-                            return {'message': "Moved to previous song"}, 200
-                        elif temp2.startswith("!fplay"):
-                            search = temp2[6:].strip("+").replace(" ", "+").lower()
-                            results = searchSpot(sp, search)
-                            for idx, track in enumerate(results['tracks']['items']):
-                                forcePlay(sp, track["uri"])
-                                found = False
-                                Artist = ""
-                                for index, artists in enumerate(track["album"]["artists"]):
-                                    Artist += artists["name"] + ", "
-                                    found = True
-                                if not found:
-                                    Artist = "No found artist"
-                                else:
-                                    Artist = Artist[0:-2]
-                                logging("Forced Played: " + track["name"] + " By:" + Artist + " -------------- Link: " +
-                                        track["external_urls"]["spotify"], provider)
-                                return {'message': "Forced Played: " + track["name"] + "\nBy:" + Artist + "\nLink: " + \
-                                                   track["external_urls"]["spotify"]}, 200
-                        elif temp2.startswith("!vol"):
-                            vol = temp2[6:].strip("+").replace(" ", "+").lower()
-                            changeVolume(sp, vol)
+                        if temp.startswith("!"):
+                            text = temp[1:].strip().lower()
+                            command = text.split(" ")[0]
+                            notcommand = text.replace(command, "").strip()
+                            if command == "next":
+                                nexttrack(sp)
+                                logging("Moved to next Song", provider)
+                                return {'message': "Moved to next song"}, 200
+                            elif command == "back":
+                                backtrack(sp)
+                                logging("Moved to previous Song", provider)
+                                return {'message': "Moved to previous song"}, 200
+                            elif command == "fplay":
+                                search = notcommand.replace(" ", "+").lower()
+                                results = searchSpot(sp, search)
+                                for idx, track in enumerate(results['tracks']['items']):
+                                    forcePlay(sp, track["uri"])
+                                    found = False
+                                    Artist = ""
+                                    for index, artists in enumerate(track["album"]["artists"]):
+                                        Artist += artists["name"] + ", "
+                                        found = True
+                                    if not found:
+                                        Artist = "No found artist"
+                                    else:
+                                        Artist = Artist[0:-2]
+                                    logging("Forced Played: " + track["name"] + " By:" + Artist + " -------------- Link: " +
+                                            track["external_urls"]["spotify"], provider)
+                                    return {'message': "Forced Played: " + track["name"] + "\nBy:" + Artist + "\nLink: " + \
+                                                       track["external_urls"]["spotify"]}, 200
+                            elif command == "vol" or command == "volume":
+                                try:
+                                    vol = int(notcommand)
+                                    changeVolume(sp, vol)
+                                    logging("Volume changed to " + str(vol), provider)
+                                    return {'message': "Volume Changed to " + str(vol)}, 200
+                                except ValueError as e:
+                                    logging("Error: "+notcommand+" was not a Integer", provider)
+                                    return {'message': "Error: Not a Integer"}, 200
+                            else:
+                                return {'message': "Command not found"}, 200
                         else:
-                            results = searchSpot(sp, temp2)
+                            searchString = temp.replace(" ", "+").lower()
+                            results = searchSpot(sp, searchString)
                             sent = False
                             for idx, track in enumerate(results['tracks']['items']):
                                 addQueue(sp, track["uri"])
@@ -88,7 +101,7 @@ class SpotifyConnect(Resource):
                                 return {'message': "Added " + track["name"] + "\nBy:" + Artist + "\nLink: " + \
                                                    track["external_urls"]["spotify"]}, 200
                             if not sent:
-                                logging("No results for " + temp2, provider)
+                                logging("No results for " + temp, provider)
                                 return {'message': "Did not add: There were no results"}, 200
                     except spotipy.SpotifyException as error:
                         if error.reason != "NO_ACTIVE_DEVICE":
@@ -108,6 +121,8 @@ class SpotifyConnect(Resource):
         else:
             logging("Did not provide phone number or message", "unknown")
             return {'message': "Must have \'name\' and \'message\'"}, 400
+        logging("Error: Nothing was matched How is that possible", "Unknown")
+        return {'message': "Error: Nothing was matched"}, 200
 
 
 @celery.task()
