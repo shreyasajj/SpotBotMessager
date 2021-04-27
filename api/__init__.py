@@ -66,6 +66,9 @@ class SpotifyConnect(Resource):
                                         track["external_urls"]["spotify"], provider)
                                 return {'message': "Forced Played: " + track["name"] + "\nBy:" + Artist + "\nLink: " + \
                                                    track["external_urls"]["spotify"]}, 200
+                        elif temp2.startswith("!vol"):
+                            vol = temp2[6:].strip("+").replace(" ", "+").lower()
+                            changeVolume(sp, vol)
                         else:
                             results = searchSpot(sp, temp2)
                             sent = False
@@ -130,6 +133,10 @@ def forcePlay(sp, play):
 @celery.task()
 def addQueue(sp, play):
     sp.add_to_queue(uri=play)
+
+@celery.task()
+def changeVolume(sp, volume):
+    sp.volume(volume)
 
 
 # data processing endpoint
