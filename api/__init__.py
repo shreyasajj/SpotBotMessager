@@ -1,8 +1,6 @@
 import os
-import time
 from datetime import datetime
-
-from flask import jsonify, request
+from flask import request
 from flask_restful import Api, Resource
 from tasks import celery
 import config
@@ -53,13 +51,13 @@ class SpotifyConnect(Resource):
                                     logging("Moved to previous Song", name)
                                     return {'message': "Moved to previous song"}, 200
                                 elif command == "fplay":
-                                    playReturn = searchAndPlaySpot(notcommand,  sp, forcePlay)
+                                    playReturn = searchAndPlaySpot(notcommand, sp, forcePlay)
                                     if playReturn:
                                         track = playReturn[0]
                                         Artist = playReturn[1]
                                         logging("Forced Played: " + track[
-                                                "name"] + " By:" + Artist + " -------------- Link: " +
-                                                    track["external_urls"]["spotify"], name)
+                                            "name"] + " By:" + Artist + " -------------- Link: " +
+                                                track["external_urls"]["spotify"], name)
                                         return {'message': "Forced Played: " + track[
                                             "name"] + "\nBy:" + Artist + "\nLink: " + \
                                                            track["external_urls"]["spotify"]}, 200
@@ -81,12 +79,12 @@ class SpotifyConnect(Resource):
                             else:
                                 playReturn = searchAndPlaySpot(temp, sp, addQueue)
                                 if playReturn:
-                                    track=playReturn[0]
-                                    Artist=playReturn[1]
+                                    track = playReturn[0]
+                                    Artist = playReturn[1]
                                     logging("Added " + track["name"] + " By:" + Artist + " ---------- Link: " + \
                                             track["external_urls"]["spotify"], name)
                                     return {'message': "Added " + track["name"] + "\nBy:" + Artist + "\nLink: " + \
-                                                   track["external_urls"]["spotify"]}, 200
+                                                       track["external_urls"]["spotify"]}, 200
                                 else:
                                     logging("Queue: No results for " + temp, name)
                                     return {'message': "Did not add: There were no results"}, 200
@@ -135,7 +133,6 @@ def searchAndPlaySpot(inputVal, sp, command):
 
     if not sent:
         return False
-
 
 
 @celery.task()

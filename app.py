@@ -25,23 +25,17 @@ def logging(log, contact):
 
 def create_app():
     print(f'Starting app in {config.APP_ENV} environment')
-    app = Flask(__name__)
-    app.config.from_object('config')
-    api.init_app(app)
+    flask_app = Flask(__name__)
+    flask_app.config.from_object('config')
+    api.init_app(flask_app)
 
-    # @app.before_first_request
-    # def beforeAnything():
-    #     fname = "Logging.txt"
-    #     if os.path.isfile(fname):
-    #         os.remove(fname)
-
-    @app.route('/', methods=['GET'])
+    @flask_app.route('/', methods=['GET'])
     def index():
         print(request.host_url)
         print(str(request.is_secure))
         return render_template("index.html")
 
-    @app.route('/login', methods=['GET'])
+    @flask_app.route('/login', methods=['GET'])
     def spotifyLogin():
 
         cache_handler = spotipy.cache_handler.CacheFileHandler(cache_path='.cache')
@@ -68,7 +62,7 @@ def create_app():
         logging("Already Login Passing on", "System")
         return redirect('/')
 
-    @app.route('/stream', methods=['GET'])
+    @flask_app.route('/stream', methods=['GET'])
     def stream():
         def generate():
 
@@ -82,9 +76,9 @@ def create_app():
                         sleep(1)
                     sleep(1)
 
-        return app.response_class(generate(), mimetype='text/plain')
+        return flask_app.response_class(generate(), mimetype='text/plain')
 
-    return app
+    return flask_app
 
 
 if __name__ == '__main__':
