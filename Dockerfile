@@ -1,23 +1,5 @@
-#FROM python:3.8-slim-buster
-##FROM tiangolo/uwsgi-nginx-flask:python3.6-alpine3.7
-#WORKDIR /app
-#
-#COPY . /app
-#
-#ENV STATIC_URL /static
-#ENV STATIC_PATH /var/www/app/static
-#
-##RUN apt-get -y update
-#RUN pip3 install -r requirements.txt
-#RUN pip install uwsgi==2.0.17
-#
-##EXPOSE 5000
-#
-##CMD [ "python3", "-m" , "flask", "run", "--host=0.0.0.0"]
-#CMD [ "python3", "app.py"]
-##CMD ["uwsgi --ini uwsgi.ini"]
 FROM python:3.8
-#FROM python:latest
+
 RUN pip install pipenv
 
 WORKDIR /app
