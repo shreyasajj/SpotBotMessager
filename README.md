@@ -13,5 +13,20 @@ control spotify
 2. Go to "https://your.site/login" to be prompted for login. If you need to login, it will redirect you. If you need to know what the login redirect url it needs go to the home page and it should show you on the logs portion of the page.
 3. Hit the endpoint "https://your.site/api/message" with a `post` request having a body in `form-data` containing `name = "User asking permision"` and `message="asking/command"` (message must start with `!`)
 
-### Im sure this works without docker but haven't really tested it that much
+#Environmental Variable
+1. CLIENT_ID= "Get from spotify"
+2. CLIENT_SECRET = "Get from spotify"
+3. APP_ENV = "Production, Test, Development"
+
+##Optional
+1. NUM_TOKEN = "Created a number of application token to be check for any api request"
+
+#Mount File
+Can mount `/app/data` to any folder. Example `-v /data:/app/data`. 
+After everything setup you will see 3 files in the mounted folder
+1. token.txt
+2. Logging.txt
+3. .cache
+
+# Im sure this works without docker but haven't really tested it that much
 
