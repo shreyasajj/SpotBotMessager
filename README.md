@@ -1,6 +1,6 @@
 # Spotify Bot Message Injecter
-Its creation was the idea that if you send commands from anywhere like a phone sms, it would
-control spotify
+This creation was the idea that if you send commands from anywhere like a SMS, it would be able to 
+control spotify if given the right parameters
 
 # Install
 ## Prerequisites 
@@ -10,7 +10,7 @@ control spotify
 
 # Steps
 1. Just run `docker run -d -p 5000:5000 -env CLIENT_ID="CLIENT_ID from spotify" --env CLIENT_SECRET="CLIENT_SECRET from spotify" --env APP_ENV="Production" shreyajj/spotifybot:latest`
-2. Go to "https://your.site/login" to be prompted for login. If you need to login, it will redirect you. If you need to know what the login redirect url it needs go to the home page and it should show you on the logs portion of the page.
+2. Go to "https://your.site/login" to be prompted for login. If you need to login, it will redirect you. If you need to know what the login redirect url, go to the home page and it should show you the redirect Url on the page like `REDIRECT URL: http://your.site/login"`.
 3. Hit the endpoint "https://your.site/api/message" with a `post` request having a body in `form-data` containing `name = "User asking permision"` and `message="asking/command"` (message must start with `!`)
 
 # Environmental Variable
@@ -31,8 +31,8 @@ After everything setup you will see 3 files in the mounted folder
 
 # Commands
 * `!"Any song"` - Adds to Queue to current device playing
-* `!!next` - Skips songs to current device playing
-* `!!back` - Go back a song to current device playing
+* `!!next` - Skips songs on the current device playing
+* `!!back` - Go back a song on the current device playing
 * `!!fplay "Song to play"` - Searches for the song and force play the song for the current device playing
 * `!!volume "a number from 0-100"` - Changes the volume for the current device
 
