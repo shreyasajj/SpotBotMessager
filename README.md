@@ -1,12 +1,12 @@
 # Spotify Bot Message Injecter
-It creation was the idea that if you send commands from anywhere like a phone sms that would
+Its creation was the idea that if you send commands from anywhere like a phone sms, it would
 control spotify
 
 # Install
 ## Prerequisites 
-1. Get a web Proxy
-2. Get redis
-3. Docker install
+1. A Web Proxy
+2. Redis
+3. Docker
 
 # Steps
 1. Just run `docker run -d -p 5000:5000 -env CLIENT_ID="CLIENT_ID from spotify" --env CLIENT_SECRET="CLIENT_SECRET from spotify" --env APP_ENV="Production" shreyajj/spotifybot:latest`
