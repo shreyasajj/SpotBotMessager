@@ -14,9 +14,10 @@ control spotify
 3. Hit the endpoint "https://your.site/api/message" with a `post` request having a body in `form-data` containing `name = "User asking permision"` and `message="asking/command"` (message must start with `!`)
 
 # Environmental Variable
+## https://developer.spotify.com/dashboard/login
 1. CLIENT_ID= "Get from spotify"
 2. CLIENT_SECRET = "Get from spotify"
-3. APP_ENV = "Production, Test, Development"
+3. APP_ENV = "Choose: 'Production', 'Test', 'Development'"
 
 ## Optional
 1. NUM_TOKEN = "Created a number of application token to be check for any api request"
