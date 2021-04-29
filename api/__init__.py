@@ -71,12 +71,15 @@ class SpotifyConnect(Resource):
                                     elif command == "vol" or command == "volume":
                                         try:
                                             vol = int(notcommand)
-                                            changeVolume(sp, vol)
-                                            loggingWrite("Volume changed to " + str(vol), name)
-                                            return {'message': "Volume Changed to " + str(vol)}, 200
+                                            if vol>=0 and vol<=100:
+                                                changeVolume(sp, vol)
+                                                loggingWrite("Volume changed to " + str(vol), name)
+                                                return {'message': "Volume Changed to " + str(vol)}, 200
+                                            else:
+                                                raise ValueError
                                         except ValueError as e:
-                                            loggingWrite("Error: " + notcommand + " was not a Integer", name)
-                                            return {'message': "Error: Not a Integer"}, 200
+                                            loggingWrite("Error: " + notcommand + " was not a valid number, must be between 0 and 100", name)
+                                            return {'message': "Error: Not a Valid Number, must be between 0 and 100"}, 200
                                     else:
                                         return {'message': "Command not found"}, 200
 
