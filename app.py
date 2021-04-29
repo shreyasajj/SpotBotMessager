@@ -7,14 +7,11 @@ import spotipy
 from flask import Flask, request, render_template, redirect
 from spotipy.oauth2 import SpotifyOAuth
 
-
 from api import api
 import config
 from config.logger import loggingWrite
-
-
-
-
+from config.logger import logFileName
+import config.Application as application
 
 
 #
@@ -52,31 +49,44 @@ def getDifference(then, now=datetime.now(), interval="secs"):
         'secs': int(secs())
     }[interval]
 
+
 def create_app():
     print(f'Starting app in {config.APP_ENV} environment')
     flask_app = Flask(__name__)
     flask_app.config.from_object('config')
     api.init_app(flask_app)
-    # log=logValue()
-
 
     @flask_app.route('/', methods=['GET'])
     def index():
         return render_template("index.html")
 
-    # @flask_app.before_request
-    # def start():
-    #     logValue()
+    @flask_app.before_first_request
+    def start():
+        num_token = 1
+        try:
+            num_token = int(os.environ["NUM_TOKENS"])
+        except ValueError as e:
+            num_token = 1
+        except KeyError as e:
+            num_token = 1
+        if not os.path.isfile(application.tokenFileName) or len(open(application.tokenFileName).readlines()) != num_token:
+            application.random_string_generator(50, num_token)
+            loggingWrite("Created " + str(num_token) + " token(s)", "System")
+
+
+
+
     @flask_app.route('/login', methods=['GET'])
     def spotifyLogin():
 
-        cache_handler = spotipy.cache_handler.CacheFileHandler(cache_path='.cache')
+        cache_handler = spotipy.cache_handler.CacheFileHandler(cache_path='data/.cache')
         auth_manager = SpotifyOAuth(client_id=os.environ["CLIENT_ID"],
                                     client_secret=os.environ["CLIENT_SECRET"],
                                     redirect_uri=request.host_url + "login",
                                     scope="user-modify-playback-state "
                                           "user-read-playback-state "
-                                          "user-read-recently-played")
+                                          "user-read-recently-played",
+                                    cache_handler=cache_handler)
         if request.args.get("code"):
             # Step 3. Being redirected from Spotify auth page
             auth_manager.get_access_token(request.args.get("code"))
@@ -97,11 +107,9 @@ def create_app():
     @flask_app.route('/stream', methods=['GET'])
     def stream():
         def generate():
-
-            fname = "Logging.txt"
-            while not os.path.isfile(fname):
+            while not os.path.isfile(logFileName):
                 sleep(1)
-            with open(fname) as f:
+            with open(logFileName) as f:
                 withinTime = True
                 while True:
                     failed = False
@@ -120,7 +128,7 @@ def create_app():
                         if withinTime:
                             yield debug
                     # yield date
-                    while not os.path.isfile(fname):
+                    while not os.path.isfile(logFileName):
                         sleep(1)
                     sleep(.05)
 
@@ -130,33 +138,8 @@ def create_app():
 
 
 if __name__ == '__main__':
-    # fname = "Logging.txt"
-    # logfile=[]
-    # with open(fname) as f:
-    #     withinTime = True
-    #     while True:
-    #         failed= False
-    #         debug = f.readline()
-    #         try:
-    #             datetimeValue = debug.split(" - ")
-    #             date = datetime.strptime(datetimeValue[0], "%b-%d-%Y %X")
-    #             if getDifference(date, datetime.now(), 'hrs') < 11:
-    #                 withinTime = True
-    #                 print(debug)
-    #             else:
-    #                 withinTime = False
-    #         except ValueError as e:
-    #             failed = True
-    #         if failed:
-    #             if withinTime:
-    #                 print(debug)
 
-
-
-
-
-
-    if "CLIENT_ID" in os.environ and "CLIENT_SECRET" in os.environ:
+    if "CLIENT_ID" in os.environ and "CLIENT_SECRET" in os.environ :
         app = create_app()
         app.run()
     else:

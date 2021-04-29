@@ -17,10 +17,13 @@ services:
     build: .
     ports:
       - "5000:5000"
+    volumes:
+      - $PWD/APPLow/data:/app/data
     environment:
       - APP_ENV=${APP_ENV}
       - CLIENT_ID=$Client_Secret
       - CLIENT_SECRET=$Client_Id
+      - NUM_TOKENS=1
     depends_on:
       - redis
 

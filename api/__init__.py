@@ -7,6 +7,7 @@ import config
 
 import spotipy
 from config.logger import loggingWrite
+from config.Application import validateToken
 
 
 api = Api(prefix=config.API_PREFIX)
@@ -16,100 +17,113 @@ api = Api(prefix=config.API_PREFIX)
 
 class SpotifyConnect(Resource):
     def post(self):
-        name = request.form.get("name", None)
-        messageVal = request.form.get("message", None)
-        try:
-            if name and messageVal:
-                cache_handler = spotipy.cache_handler.CacheFileHandler(cache_path='.cache')
-                auth_manager = spotipy.oauth2.SpotifyOAuth(client_id=os.environ["CLIENT_ID"],
-                                                           client_secret=os.environ["CLIENT_SECRET"],
-                                                           redirect_uri=request.host_url + "login",
-                                                           cache_handler=cache_handler)
-                if not auth_manager.validate_token(cache_handler.get_cached_token()):
-                    loggingWrite("Need to login", "System")
-                    return {'message': "Please Login to :" + request.host_url + "login"}, 309
+        token = request.headers.get("API_Key", None)
+        if not token:
+            loggingWrite("No token provided", "System")
+            return {'message': "No API Token Provided"}, 401
+        if validateTokenValue(token):
+            name = request.form.get("name", None)
+            messageVal = request.form.get("message", None)
+            try:
+                if name and messageVal:
+                    cache_handler = spotipy.cache_handler.CacheFileHandler(cache_path='data/.cache')
+                    auth_manager = spotipy.oauth2.SpotifyOAuth(client_id=os.environ["CLIENT_ID"],
+                                                               client_secret=os.environ["CLIENT_SECRET"],
+                                                               redirect_uri=request.host_url + "login",
+                                                               cache_handler=cache_handler)
+                    if not auth_manager.validate_token(cache_handler.get_cached_token()):
+                        loggingWrite("Need to login", "System")
+                        return {'message': "Please Login to :" + request.host_url + "login"}, 309
 
-                sp = spotipy.Spotify(auth_manager=auth_manager)
+                    sp = spotipy.Spotify(auth_manager=auth_manager)
 
-                message = messageVal
-                if message.startswith("!"):
-                    temp = message[1:].strip().lower()
-                    if temp != "!" and temp != "" and temp != "!!":
-                        try:
-                            if temp.startswith("!"):
-                                text = temp[1:].strip().lower()
-                                command = text.split(" ")[0]
-                                notcommand = text.replace(command, "").strip()
-                                if command == "next":
-                                    nexttrack(sp)
-                                    loggingWrite("Moved to next Song", name)
-                                    return {'message': "Moved to next song"}, 200
-                                elif command == "back":
-                                    backtrack(sp)
-                                    loggingWrite("Moved to previous Song", name)
-                                    return {'message': "Moved to previous song"}, 200
-                                elif command == "fplay":
-                                    playReturn = searchAndPlaySpot(notcommand, sp, forcePlay)
+                    message = messageVal
+                    if message.startswith("!"):
+                        temp = message[1:].strip().lower()
+                        if temp != "!" and temp != "" and temp != "!!":
+                            try:
+                                if temp.startswith("!"):
+                                    text = temp[1:].strip().lower()
+                                    command = text.split(" ")[0]
+                                    notcommand = text.replace(command, "").strip()
+                                    if command == "next":
+                                        nexttrack(sp)
+                                        loggingWrite("Moved to next Song", name)
+                                        return {'message': "Moved to next song"}, 200
+                                    elif command == "back":
+                                        backtrack(sp)
+                                        loggingWrite("Moved to previous Song", name)
+                                        return {'message': "Moved to previous song"}, 200
+                                    elif command == "fplay":
+                                        playReturn = searchAndPlaySpot(notcommand, sp, forcePlay)
+                                        if playReturn:
+                                            track = playReturn[0]
+                                            Artist = playReturn[1]
+                                            loggingWrite("Forced Played: " + track[
+                                                "name"] + " By:" + Artist + " -------------- Link: " +
+                                                    track["external_urls"]["spotify"], name)
+                                            return {'message': "Forced Played: " + track[
+                                                "name"] + "\nBy:" + Artist + "\nLink: " + \
+                                                               track["external_urls"]["spotify"]}, 200
+                                        else:
+                                            loggingWrite("Force Play: No results for " + temp, name)
+                                            return {'message': "Did not play: There were no results"}, 200
+                                    elif command == "vol" or command == "volume":
+                                        try:
+                                            vol = int(notcommand)
+                                            changeVolume(sp, vol)
+                                            loggingWrite("Volume changed to " + str(vol), name)
+                                            return {'message': "Volume Changed to " + str(vol)}, 200
+                                        except ValueError as e:
+                                            loggingWrite("Error: " + notcommand + " was not a Integer", name)
+                                            return {'message': "Error: Not a Integer"}, 200
+                                    else:
+                                        return {'message': "Command not found"}, 200
+
+                                else:
+                                    playReturn = searchAndPlaySpot(temp, sp, addQueue)
                                     if playReturn:
                                         track = playReturn[0]
                                         Artist = playReturn[1]
-                                        loggingWrite("Forced Played: " + track[
-                                            "name"] + " By:" + Artist + " -------------- Link: " +
+                                        loggingWrite("Added " + track["name"] + " By:" + Artist + " ---------- Link: " + \
                                                 track["external_urls"]["spotify"], name)
-                                        return {'message': "Forced Played: " + track[
-                                            "name"] + "\nBy:" + Artist + "\nLink: " + \
+                                        return {'message': "Added " + track["name"] + "\nBy:" + Artist + "\nLink: " + \
                                                            track["external_urls"]["spotify"]}, 200
                                     else:
-                                        loggingWrite("Force Play: No results for " + temp, name)
-                                        return {'message': "Did not play: There were no results"}, 200
-                                elif command == "vol" or command == "volume":
-                                    try:
-                                        vol = int(notcommand)
-                                        changeVolume(sp, vol)
-                                        loggingWrite("Volume changed to " + str(vol), name)
-                                        return {'message': "Volume Changed to " + str(vol)}, 200
-                                    except ValueError as e:
-                                        loggingWrite("Error: " + notcommand + " was not a Integer", name)
-                                        return {'message': "Error: Not a Integer"}, 200
+                                        loggingWrite("Queue: No results for " + temp, name)
+                                        return {'message': "Did not add: There were no results"}, 200
+                            except spotipy.SpotifyException as error:
+                                if error.reason == "NO_ACTIVE_DEVICE":
+                                    loggingWrite("Error: Spotify not active: " + str(error), name)
+                                    return {'message': "Error: Spotify not active"}, 428
+                                elif error.reason == "VOLUME_CONTROL_DISALLOW":
+                                    loggingWrite("Error: Volume Cannot Be Controlled: " + str(error), name)
+                                    return {'message': "Volume Cannot Be Controlled"}, 200
                                 else:
-                                    return {'message': "Command not found"}, 200
+                                    raise error
 
-                            else:
-                                playReturn = searchAndPlaySpot(temp, sp, addQueue)
-                                if playReturn:
-                                    track = playReturn[0]
-                                    Artist = playReturn[1]
-                                    loggingWrite("Added " + track["name"] + " By:" + Artist + " ---------- Link: " + \
-                                            track["external_urls"]["spotify"], name)
-                                    return {'message': "Added " + track["name"] + "\nBy:" + Artist + "\nLink: " + \
-                                                       track["external_urls"]["spotify"]}, 200
-                                else:
-                                    loggingWrite("Queue: No results for " + temp, name)
-                                    return {'message': "Did not add: There were no results"}, 200
-                        except spotipy.SpotifyException as error:
-                            if error.reason == "NO_ACTIVE_DEVICE":
-                                loggingWrite("Error: Spotify not active: " + str(error), name)
-                                return {'message': "Error: Spotify not active"}, 428
-                            elif error.reason == "VOLUME_CONTROL_DISALLOW":
-                                loggingWrite("Error: Volume Cannot Be Controlled: " + str(error), name)
-                                return {'message': "Volume Cannot Be Controlled"}, 200
-                            else:
-                                raise error
-
+                        else:
+                            loggingWrite("Nothing was provided", name)
+                            return {'message': "Error: There was nothing provided"}, 404
                     else:
-                        loggingWrite("Nothing was provided", name)
-                        return {'message': "Error: There was nothing provided"}, 404
+                        loggingWrite("Did not have a message that started with !", name)
+                        return {'message': "Must start with !"}, 422
                 else:
-                    loggingWrite("Did not have a message that started with !", name)
-                    return {'message': "Must start with !"}, 422
-            else:
-                loggingWrite("Did not provide phone number or message", "unknown")
-                return {'message': "Must have \'name\' and \'message\'"}, 422
-        except Exception as e:
-            loggingWrite("Error: " + str(e) + " --- Command is: " + str(messageVal), name)
-            return {'message': "Error Occurred "}, 400
-        loggingWrite("Error: Nothing was matched How is that possible. The command is : " + str(messageVal), "Unknown")
-        return {'message': "Error: Nothing was matched"}, 400
+                    loggingWrite("Did not provide phone number or message", "unknown")
+                    return {'message': "Must have \'name\' and \'message\'"}, 422
+            except Exception as e:
+                loggingWrite("Error: " + str(e) + " --- Command is: " + str(messageVal), name)
+                return {'message': "Error Occurred "}, 400
+            loggingWrite("Error: Nothing was matched How is that possible. The command is : " + str(messageVal), "Unknown")
+            return {'message': "Error: Nothing was matched"}, 400
+        else:
+            loggingWrite("Error: Token Invalid", "System")
+            return {"message": "Error: Token must be valid"}, 401
+
+
+@celery.task()
+def validateTokenValue(Token):
+    return validateToken(Token)
 
 
 def searchAndPlaySpot(inputVal, sp, command):
