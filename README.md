@@ -15,19 +15,26 @@ control spotify
 
 # Environmental Variable
 ## https://developer.spotify.com/dashboard/login
-1. CLIENT_ID= "Get from spotify"
-2. CLIENT_SECRET = "Get from spotify"
-3. APP_ENV = "Choose: 'Production', 'Test', 'Development'"
+* CLIENT_ID= "Get from spotify"
+* CLIENT_SECRET = "Get from spotify"
+* APP_ENV = "Choose: 'Production', 'Test', 'Development'"
 
 ## Optional
-1. NUM_TOKEN = "Created a number of application token to be check for any api request"
+* NUM_TOKEN = "Created a number of application token to be check for any api request"
 
 # Mount File
 Can mount `/app/data` to any folder. Example `-v /data:/app/data`. 
 After everything setup you will see 3 files in the mounted folder
-1. token.txt
-2. Logging.txt
-3. .cache
+* token.txt
+* Logging.txt
+* .cache
+
+# Commands
+* `!"Any song"` - Adds to Queue to current device playing
+* `!!next` - Skips songs to current device playing
+* `!!back` - Go back a song to current device playing
+* `!!fplay "Song to play"` - Searches for the song and force play the song for the current device playing
+* `!!volume "a number from 0-100"` - Changes the volume for the current device
 
 # Im sure this works without docker but haven't really tested it that much
 
