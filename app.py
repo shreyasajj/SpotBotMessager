@@ -138,7 +138,7 @@ def create_app():
 
 if __name__ == '__main__':
 
-    if "CLIENT_ID" in os.environ and "CLIENT_SECRET" in os.environ :
+    if "CLIENT_ID" in os.environ and "CLIENT_SECRET" in os.environ:
         app = create_app()
         app.run()
     else:
