@@ -8,9 +8,13 @@ import config
 import spotipy
 from config.logger import loggingWrite
 from config.Application import validateToken
-
+import time
 
 api = Api(prefix=config.API_PREFIX)
+lasttime=0
+queue=[]
+songdetails={}
+
 
 
 
@@ -36,6 +40,7 @@ class SpotifyConnect(Resource):
                         return {'message': "Please Login to :" + request.host_url + "login"}, 309
 
                     sp = spotipy.Spotify(auth_manager=auth_manager)
+
 
                     message = messageVal
                     if message.startswith("!"):
@@ -80,6 +85,46 @@ class SpotifyConnect(Resource):
                                         except ValueError as e:
                                             loggingWrite("Error: " + notcommand + " was not a valid number, must be between 0 and 100", name)
                                             return {'message': "Error: Not a Valid Number, must be between 0 and 100"}, 200
+                                    elif command == "queue":
+                                        if len(queue) != 0:
+                                            previoussongs = previoussong(sp, int(songdetails[queue[0]][3]))
+                                            for item in previoussongs["items"]:
+                                                if item["track"]["id"] in queue:
+                                                    queue.remove(item["track"]["id"])
+                                                    if item["track"]["id"] in songdetails:
+                                                        songdetails.pop(item["track"]["id"])
+                                        currentsong = currentlyplaying(sp)
+                                        if currentsong["item"]["id"] != "":
+                                            if currentsong["item"]["id"] in queue:
+                                                queue.remove(currentsong["item"]["id"])
+                                                if currentsong["item"]["id"] in songdetails:
+                                                    songdetails.pop(currentsong["item"]["id"])
+                                            currentArtist=""
+                                            found=False
+                                            for index, artists in enumerate(currentsong["item"]["artists"]):
+                                                currentArtist += artists["name"] + ", "
+                                                found = True
+                                            if not found:
+                                                currentArtist = "No found artist"
+                                            else:
+                                                currentArtist = currentArtist[0:-2]
+                                            returnmessage="Current Song: "+currentsong["item"]["name"]+ " By: "+currentArtist
+                                            returnmessage+="\n----------------------------\nQueue:"
+                                            number=1
+                                            if len(queue) == 0:
+                                                returnmessage+="\nNothing in Queue"
+                                            for item in queue:
+                                                songdet= songdetails[item]
+                                                returnmessage+="\n"+str(number)+". "+songdet[1]+" By: "+songdet[2]+" -- Queued By:"+songdet[0]
+                                                number+=1
+                                            loggingWrite("Return Queue", name)
+                                            return {'message': returnmessage}, 200
+
+                                        else:
+                                            loggingWrite("Nothing is currently playing", name)
+                                            return {'message': "Spotify is not running now"}, 200
+
+
                                     else:
                                         return {'message': "Command not found"}, 200
 
@@ -88,6 +133,12 @@ class SpotifyConnect(Resource):
                                     if playReturn:
                                         track = playReturn[0]
                                         Artist = playReturn[1]
+                                        if len(queue) != 0:
+                                            if time.time() - songdetails[queue[len(queue)-1]][3] > 21600:
+                                                queue.clear()
+                                                songdetails.clear()
+                                        queue.append(track["id"])
+                                        songdetails[track["id"]] = [name, track["name"], Artist, time.time()]
                                         loggingWrite("Added " + track["name"] + " By:" + Artist + " ---------- Link: " + \
                                                 track["external_urls"]["spotify"], name)
                                         return {'message': "Added " + track["name"] + "\nBy:" + Artist + "\nLink: " + \
@@ -97,6 +148,8 @@ class SpotifyConnect(Resource):
                                         return {'message': "Did not add: There were no results"}, 200
                             except spotipy.SpotifyException as error:
                                 if error.reason == "NO_ACTIVE_DEVICE":
+                                    queue.clear()
+                                    songdetails.clear()
                                     loggingWrite("Error: Spotify not active: " + str(error), name)
                                     return {'message': "Error: Spotify not active"}, 428
                                 elif error.reason == "VOLUME_CONTROL_DISALLOW":
@@ -104,7 +157,6 @@ class SpotifyConnect(Resource):
                                     return {'message': "Volume Cannot Be Controlled"}, 200
                                 else:
                                     raise error
-
                         else:
                             loggingWrite("Nothing was provided", name)
                             return {'message': "Error: There was nothing provided"}, 404
@@ -149,6 +201,16 @@ def searchAndPlaySpot(inputVal, sp, command):
     if not sent:
         return False
 
+@celery.task()
+def currentlyplaying(sp):
+    return sp.current_user_playing_track()
+
+@celery.task()
+def previoussong(sp, time):
+    if time == 0:
+        return sp.current_user_recently_played(limit=50)
+    else:
+        return sp.current_user_recently_played(after=time, limit=50)
 
 @celery.task()
 def nexttrack(sp):
@@ -168,6 +230,7 @@ def searchSpot(sp, search):
 @celery.task()
 def forcePlay(sp, play):
     sp.start_playback(uris=[play])
+
 
 
 @celery.task()
