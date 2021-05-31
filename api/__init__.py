@@ -94,7 +94,7 @@ class SpotifyConnect(Resource):
                                                     if item["track"]["id"] in songdetails:
                                                         songdetails.pop(item["track"]["id"])
                                         currentsong = currentlyplaying(sp)
-                                        if currentsong["item"]["id"] != "":
+                                        if currentsong != None:
                                             if currentsong["item"]["id"] in queue:
                                                 queue.remove(currentsong["item"]["id"])
                                                 if currentsong["item"]["id"] in songdetails:
@@ -121,8 +121,10 @@ class SpotifyConnect(Resource):
                                             return {'message': returnmessage}, 200
 
                                         else:
-                                            loggingWrite("Nothing is currently playing", name)
-                                            return {'message': "Spotify is not running now"}, 200
+                                            raise spotipy.SpotifyException(http_status=404,
+                                                                           code=-1,
+                                                                           msg="!!queue\nPlayer command failed: No active device found",
+                                                                           reason="NO_ACTIVE_DEVICE")
 
 
                                     else:
