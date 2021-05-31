@@ -35,6 +35,7 @@ After everything setup you will see 3 files in the mounted folder
 * `!!back` - Go back a song on the current device playing
 * `!!fplay "Song to play"` - Searches for the song and force play the song for the current device playing
 * `!!volume "a number from 0-100"` - Changes the volume for the current device
+* `!!queue` - Shows the current queue in a makeshift version. No made way to see the spotify queue
 
 # Im sure this works without docker but haven't really tested it that much
 
