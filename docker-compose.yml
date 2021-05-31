@@ -21,8 +21,8 @@ services:
       - $PWD/APPLow/data:/app/data
     environment:
       - APP_ENV=${APP_ENV}
-      - CLIENT_ID=$Client_Secret
-      - CLIENT_SECRET=$Client_Id
+      - CLIENT_ID=$Client_Id
+      - CLIENT_SECRET=$Client_Secret
       - NUM_TOKENS=1
     depends_on:
       - redis
